@@ -5,11 +5,46 @@ fn read_top(v: &Vec<VecDeque<char>>) -> String {
     v.iter().map(|v| *v.back().unwrap()).collect()
 }
 
+fn transfer_atomic(v: &mut Vec<VecDeque<char>>, number: usize, from: usize, to: usize) {
+    let mut q: Vec<_> = (0..number)
+        .map(|_| v[from - 1].pop_back().unwrap())
+        .collect();
+
+    q.reverse();
+
+    for c in q {
+        v[to - 1].push_back(c);
+    }
+}
+
 fn transfer(v: &mut Vec<VecDeque<char>>, number: usize, from: usize, to: usize) {
     for _ in 0..number {
         let c = v[from - 1].pop_back().unwrap();
         v[to - 1].push_back(c);
     }
+}
+
+fn read_stacks(first: &str) -> Vec<VecDeque<char>> {
+    let number_of_stacks = first.split("\n").last().unwrap().split_whitespace().count();
+
+    let mut stacks: Vec<VecDeque<char>> = (0..number_of_stacks).map(|_| VecDeque::new()).collect();
+    let mut numbers: Vec<_> = first.split("\n").collect();
+    numbers.pop();
+    numbers
+        .into_iter()
+        .map(|x| {
+            for (i, c) in x
+                .chars()
+                .skip(1)
+                .step_by(4)
+                .enumerate()
+                .filter(|(_, c)| *c != ' ')
+            {
+                stacks[i].push_front(c);
+            }
+        })
+        .for_each(|_| ());
+    stacks
 }
 
 fn main() {
@@ -34,26 +69,10 @@ move 1 from 1 to 2";
 
     //println!("first:\n{}", first);
 
-    let stacks: Vec<VecDeque<char>> = (0..number_of_stacks).map(|_| VecDeque::new()).collect();
-// part 1
+    let stacks = read_stacks(first);
+    // part 1
     {
         let mut stacks = stacks.clone();
-        let mut numbers: Vec<_> = first.split("\n").collect();
-        numbers.pop();
-        numbers
-            .into_iter()
-            .map(|x| {
-                for (i, c) in x
-                    .chars()
-                    .skip(1)
-                    .step_by(4)
-                    .enumerate()
-                    .filter(|(_, c)| *c != ' ')
-                {
-                    stacks[i].push_front(c);
-                }
-            })
-            .for_each(|_| ());
 
         for x in second.split("\n").filter(|x| *x != "") {
             let mut w = x.split_whitespace();
@@ -68,4 +87,22 @@ move 1 from 1 to 2";
         }
         dbg!(read_top(&stacks));
     }
+    // part 2
+    {
+        let mut stacks = stacks.clone();
+
+        for x in second.split("\n").filter(|x| *x != "") {
+            let mut w = x.split_whitespace();
+            let mut n = || w.next().unwrap();
+            n();
+            let number = n().parse::<usize>().unwrap();
+            n();
+            let from = n().parse::<usize>().unwrap();
+            n();
+            let to = n().parse::<usize>().unwrap();
+            transfer_atomic(&mut stacks, number, from, to);
+        }
+        dbg!(read_top(&stacks));
+    }
 }
+
